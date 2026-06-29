@@ -1,14 +1,3 @@
-"""Deteccao automatica das plantulas.
-
-Estrategia:
-  - "cabecas" = cotiledones amarelos e sementes escuras (topo da estrutura branca);
-  - de cada cabeca, segue-se a estrutura ate o ponto geodesicamente mais distante
-    (a ponta da raiz), usando o mesmo mapa de custo do tracado;
-  - plantulas duplicadas (caminhos sobrepostos) sao fundidas.
-
-As raizes podem se cruzar/encostar, entao a deteccao automatica pode falhar em
-alguns casos -> a camada interativa permite corrigir (modo hibrido).
-"""
 from __future__ import annotations
 
 import cv2
@@ -78,7 +67,6 @@ def farthest_tip(
             return None
 
     comp_mask = labels == comp
-    # custo: dentro do componente usa o custo normal, fora e proibido
     cost = structures.cost.copy()
     cost[~comp_mask] = 1e6
 
@@ -106,7 +94,6 @@ def detect_seedlings(
         tip = farthest_tip(structures, snapped)
         if tip is None:
             continue
-        # evitar duplicatas: pontas muito proximas de uma ja usada
         if any((tip[0] - tx) ** 2 + (tip[1] - ty) ** 2 < 60 ** 2
                for tx, ty in used_tips):
             continue
@@ -116,7 +103,6 @@ def detect_seedlings(
             )
         except Exception:
             continue
-        # descartar caminhos curtos demais (ruido)
         if s.total_px < 80:
             continue
         seedlings.append(s)

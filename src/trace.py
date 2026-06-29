@@ -1,9 +1,3 @@
-"""Tracado do caminho real da plantula e medicao curvilinea.
-
-Usa caminho de menor custo (skimage.graph.route_through_array) sobre o mapa de
-custo gerado em structure.py: o filamento brilhante tem custo baixo, entao o
-caminho otimo acompanha a raiz mesmo curvada ou enrolada (nao em linha reta).
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -15,15 +9,15 @@ from skimage.graph import route_through_array
 @dataclass
 class Seedling:
     id: int
-    head: tuple[int, int]            # (x, y) topo da estrutura branca
-    constriction: tuple[int, int]    # (x, y) ponto de estrangulamento
-    tip: tuple[int, int]             # (x, y) extremidade da raiz
-    path: list[tuple[int, int]]      # caminho completo em (x, y)
-    constriction_idx: int            # indice de `path` no estrangulamento
+    head: tuple[int, int]
+    constriction: tuple[int, int]
+    tip: tuple[int, int]
+    path: list[tuple[int, int]]
+    constriction_idx: int
     px_per_cm: float = 0.0
-    seg1_px: float = 0.0             # topo -> estrangulamento
-    seg2_px: float = 0.0             # estrangulamento -> ponta
-    manual: bool = False             # criada/corrigida pelo usuario
+    seg1_px: float = 0.0
+    seg2_px: float = 0.0
+    manual: bool = False
     extra: dict = field(default_factory=dict)
 
     @property
@@ -109,13 +103,7 @@ def _smooth1d(a: np.ndarray, k: int = 15) -> np.ndarray:
 def find_constriction_idx(
     path: list[tuple[int, int]], width_map: np.ndarray
 ) -> int:
-    """Estima o indice do ponto de estrangulamento ao longo do caminho.
-
-    O caminho vai do topo (cotiledone/semente, mais largo) ate a ponta da raiz.
-    O estrangulamento e a transicao hipocotilo->raiz: apos a regiao larga inicial,
-    a largura cai e estabiliza. Procura-se a maior queda relativa de largura na
-    porcao inicial do caminho.
-    """
+    """Estima o indice do ponto de estrangulamento ao longo do caminho."""
     n = len(path)
     if n < 8:
         return n // 2
@@ -123,12 +111,10 @@ def find_constriction_idx(
     prof = width_profile(path, width_map)
     prof = _smooth1d(prof, k=max(5, n // 30 | 1))
 
-    # janela de busca: dos ~5% aos ~55% do caminho (apos a cabeca, antes do meio)
     lo = max(2, int(0.05 * n))
     hi = max(lo + 2, int(0.55 * n))
 
     grad = np.gradient(prof)
-    # estrangulamento = ponto de queda mais acentuada de largura (gradiente min)
     idx = lo + int(np.argmin(grad[lo:hi]))
     return int(np.clip(idx, 1, n - 2))
 
@@ -149,7 +135,6 @@ def build_seedling(
         path = [tuple(map(int, head_xy)), tuple(map(int, tip_xy))]
 
     if constriction_xy is not None:
-        # encontrar o ponto do caminho mais proximo do clique do usuario
         pts = np.asarray(path)
         d = ((pts[:, 0] - constriction_xy[0]) ** 2
              + (pts[:, 1] - constriction_xy[1]) ** 2)

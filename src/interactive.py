@@ -1,16 +1,3 @@
-"""Editor interativo (modo hibrido): roda o automatico e permite corrigir.
-
-Atalhos de teclado:
-  a  adicionar plantula: clique no TOPO (cotiledone) e depois na PONTA da raiz
-  d  apagar plantula: clique sobre uma plantula
-  c  ajustar estrangulamento: clique no ponto correto sobre uma plantula
-  k  calibrar por cliques: clique 2 marcas de cm e informe a distancia no console
-  r  re-rodar deteccao automatica
-  z  desfazer ultima adicao
-  s  salvar (imagem anotada + CSV)
-  h  mostrar/ocultar ajuda
-  q / ESC  sair (salvando)
-"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -25,7 +12,6 @@ from .pipeline import Work, auto_detect  # estado de trabalho e deteccao
 from .trace import Seedling, build_seedling  # tracado e medicao
 
 
-# Textos exibidos na barra de status para cada modo de interacao
 MODE_LABELS = {
     None: "navegacao",
     "add": "adicionar (clique topo -> ponta)",
@@ -40,26 +26,23 @@ class Editor:
 
     def __init__(self, work: Work, px_per_cm: float, out_dir: str | Path,
                  stem: str = "resultado"):
-        self.work = work  # imagem reduzida + mapas de estrutura
+        self.work = work
         self.px_per_cm = px_per_cm
-        self.seedlings: list[Seedling] = []  # plantulas detectadas/corrigidas
+        self.seedlings: list[Seedling] = []
         self.out_dir = Path(out_dir)
-        self.stem = stem  # prefixo dos arquivos de saida
-        self.mode: str | None = None  # modo atual de interacao (add/del/...)
-        self.pending: list[tuple[int, int]] = []  # cliques aguardando segundo ponto
+        self.stem = stem
+        self.mode: str | None = None
+        self.pending: list[tuple[int, int]] = []
         self.show_help = True
         self.win = "Medir Plantula  (h=ajuda)"
 
         H = work.bgr.shape[0]
-        # escala de exibicao: limita altura da janela a ~900 px
         self.disp_scale = min(1.0, 900.0 / H)
 
-    # ---- geometria de exibicao ----
     def _to_work(self, x: int, y: int) -> tuple[int, int]:
         """Converte coordenadas da janela (exibicao) para resolucao de trabalho."""
         return int(x / self.disp_scale), int(y / self.disp_scale)
 
-    # ---- operacoes ----
     def reindex(self) -> None:
         """Ordena plantulas de cima para baixo e renumeria IDs."""
         self.seedlings.sort(key=lambda s: (s.head[1], s.head[0]))
@@ -87,7 +70,7 @@ class Editor:
             )
             self.seedlings.append(s)
             self.reindex()
-        except Exception as e:  # pragma: no cover
+        except Exception as e:
             print("Falha ao tracar:", e)
 
     def _nearest_seedling(self, xy) -> Seedling | None:
@@ -98,7 +81,6 @@ class Editor:
             d = float(((pts[:, 0] - xy[0]) ** 2 + (pts[:, 1] - xy[1]) ** 2).min())
             if d < bestd:
                 bestd, best = d, s
-        # tolerancia de clique (ajustada pela escala de exibicao)
         if best is not None and bestd <= (25 / self.disp_scale) ** 2 + 900:
             return best
         return best if bestd < 1e17 else None
@@ -122,12 +104,11 @@ class Editor:
         idx = self.seedlings.index(s)
         self.seedlings[idx] = new
 
-    # ---- mouse ----
     def on_mouse(self, event, x, y, flags, param):
         """Callback do OpenCV para cliques do mouse."""
         if event != cv2.EVENT_LBUTTONDOWN:
             return
-        wx, wy = self._to_work(x, y)  # coordenadas na resolucao de trabalho
+        wx, wy = self._to_work(x, y)
         if self.mode == "add":
             self.pending.append((wx, wy))
             if len(self.pending) == 2:
@@ -148,7 +129,7 @@ class Editor:
         self.pending = []
         try:
             raw = input("Distancia real entre os 2 pontos (cm): ").strip()
-            real = float(raw.replace(",", "."))  # aceita virgula decimal
+            real = float(raw.replace(",", "."))
             cal = from_two_points(p1, p2, real)
             self.set_calibration(cal.px_per_cm)
             print(f"Calibrado: {cal.px_per_cm:.1f} px/cm ({cal.detail})")
@@ -156,12 +137,11 @@ class Editor:
             print("Calibracao cancelada:", e)
         self.mode = None
 
-    # ---- render ----
     def render(self) -> np.ndarray:
         """Monta frame atual: anotacoes + cliques pendentes + barra de status."""
         img = vz.annotate(self.work.bgr, self.seedlings, self.work.roi)
         for p in self.pending:
-            cv2.circle(img, p, 8, (0, 255, 255), 2, cv2.LINE_AA)  # cliques pendentes
+            cv2.circle(img, p, 8, (0, 255, 255), 2, cv2.LINE_AA)
         if self.disp_scale != 1.0:
             img = cv2.resize(img, None, fx=self.disp_scale, fy=self.disp_scale,
                              interpolation=cv2.INTER_AREA)
@@ -184,7 +164,6 @@ class Editor:
             ]
             for i, ln in enumerate(lines):
                 yy = 20 + i * 22
-                # contorno preto + texto amarelo para legibilidade
                 cv2.putText(img, ln, (9, yy + 1), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                             (0, 0, 0), 3, cv2.LINE_AA)
                 cv2.putText(img, ln, (9, yy), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
@@ -206,11 +185,14 @@ class Editor:
         cv2.setMouseCallback(self.win, self.on_mouse)
         while True:
             cv2.imshow(self.win, self.render())
-            key = cv2.waitKey(20) & 0xFF  # 20 ms entre frames
-            if key in (ord("q"), 27):  # q ou ESC
+            key = cv2.waitKey(20) & 0xFF
+            if key in (ord("q"), 27):
                 break
             elif key == ord("a"):
                 self.mode = "add"; self.pending = []
+            elif key == ord("p"):
+                debug_img = (self.work.structures.prob * 255).astype(np.uint8)
+                cv2.imshow("Debug - Visao do Algoritmo", debug_img)
             elif key == ord("d"):
                 self.mode = "del"; self.pending = []
             elif key == ord("c"):
@@ -219,10 +201,10 @@ class Editor:
                 self.mode = "calib"; self.pending = []
             elif key == ord("z"):
                 if self.seedlings:
-                    self.seedlings.pop(); self.reindex()  # desfaz ultima adicao
+                    self.seedlings.pop(); self.reindex()
             elif key == ord("h"):
                 self.show_help = not self.show_help
             elif key == ord("s"):
                 self.save()
-        self.save()  # salva automaticamente ao fechar
+        self.save()
         cv2.destroyAllWindows()

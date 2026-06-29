@@ -1,9 +1,3 @@
-"""Calibracao de escala: converte pixels em centimetros.
-
-Dois metodos (o usuario escolhe):
-  - manual: dois cliques sobre marcas de cm conhecidas na regua;
-  - automatico: detecta o espacamento das marcas da regua por autocorrelacao.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -42,7 +36,6 @@ def _cm_ticks_in_band(
     if band.size == 0:
         return None
     dark = (band < band.mean() - 0.4 * band.std()).astype(np.uint8) * 255
-    # erosao vertical alta: sobrevivem so os ticks mais altos (marcas de cm)
     kh = max(21, int((y1 - y0) * 0.5) | 1)
     tall = cv2.erode(dark, cv2.getStructuringElement(cv2.MORPH_RECT, (1, kh)))
     col = tall.sum(axis=0).astype(np.float32)
@@ -78,8 +71,7 @@ def from_ruler(bgr: np.ndarray) -> Calibration | None:
     gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY)
     win = max(60, int(H * 0.035))
 
-    # coletar candidatos confiaveis em varias faixas verticais
-    cands = []  # (px_per_cm, consistency, n, y0)
+    cands = []
     for y0 in range(int(H * 0.04), int(H * 0.22), max(20, win // 4)):
         res = _cm_ticks_in_band(gray, y0, y0 + win, W)
         if res is None:
@@ -91,8 +83,6 @@ def from_ruler(bgr: np.ndarray) -> Calibration | None:
     if not cands:
         return None
 
-    # as marcas de cm sao o MAIOR espacamento regular (cm > 5mm > mm).
-    # agrupa candidatos por valor proximo e escolhe o maior espacamento robusto.
     cands.sort(key=lambda c: c[0], reverse=True)
     ppc, cons, n, y0 = cands[0]
     return Calibration(

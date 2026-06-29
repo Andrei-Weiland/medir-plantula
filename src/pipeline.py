@@ -1,4 +1,3 @@
-"""Orquestracao do processamento numa resolucao de trabalho (rapida e robusta)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,8 +12,8 @@ from .trace import Seedling
 
 @dataclass
 class Work:
-    bgr: np.ndarray                      # imagem na resolucao de trabalho
-    scale: float                         # work_px = scale * orig_px
+    bgr: np.ndarray
+    scale: float
     roi: tuple[int, int, int, int]
     roi_mask: np.ndarray
     structures: st.Structures

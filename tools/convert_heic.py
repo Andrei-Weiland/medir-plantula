@@ -16,8 +16,6 @@ def main():
     dst.parent.mkdir(parents=True, exist_ok=True)
     img.save(dst, "PNG")
     print(f"Salvo {dst} tamanho={img.size}")
-
-    # versao reduzida para inspecao rapida
     preview = img.copy()
     preview.thumbnail((1400, 1400))
     prev_path = dst.with_name(dst.stem + "_preview.png")

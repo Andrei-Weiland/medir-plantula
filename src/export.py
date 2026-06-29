@@ -1,4 +1,3 @@
-"""Exportacao dos resultados: tabela CSV."""
 from __future__ import annotations
 
 import csv

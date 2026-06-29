@@ -1,4 +1,3 @@
-"""Entrada/saida de imagens, com suporte a HEIC."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -7,12 +6,12 @@ import cv2
 import numpy as np
 
 try:
-    import pillow_heif  # type: ignore
-    from PIL import Image  # type: ignore
+    import pillow_heif
+    from PIL import Image
 
     pillow_heif.register_heif_opener()
     _HEIC_OK = True
-except Exception:  # pragma: no cover
+except Exception:
     _HEIC_OK = False
 
 

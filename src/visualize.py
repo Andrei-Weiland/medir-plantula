@@ -1,4 +1,3 @@
-"""Desenho das marcacoes: caminho, 3 pontos-chave, segmentos e medidas."""
 from __future__ import annotations
 
 import cv2
@@ -6,11 +5,11 @@ import numpy as np
 
 from .trace import Seedling
 
-COLOR_SEG1 = (60, 200, 60)     # verde  (topo -> estrangulamento)
-COLOR_SEG2 = (240, 160, 30)    # azul   (estrangulamento -> ponta)
-COLOR_HEAD = (0, 215, 255)     # amarelo
-COLOR_CONSTR = (0, 0, 255)     # vermelho
-COLOR_TIP = (255, 0, 255)      # magenta
+COLOR_SEG1 = (60, 200, 60)
+COLOR_SEG2 = (240, 160, 30)
+COLOR_HEAD = (0, 215, 255)
+COLOR_CONSTR = (0, 0, 255)
+COLOR_TIP = (255, 0, 255)
 
 
 def _draw_polyline(img, pts, color, thickness):

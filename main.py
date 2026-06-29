@@ -1,14 +1,3 @@
-"""Medicao de plantulas de alface (Computacao Grafica / OpenCV).
-
-Mede, para cada plantula, dois segmentos seguindo o caminho real (curvo):
-  - Segmento 1: topo da estrutura branca  ->  ponto de estrangulamento
-  - Segmento 2: ponto de estrangulamento  ->  extremidade da raiz
-Converte para cm via regua (automatico) ou cliques, e exporta tabela + imagem
-anotada.
-
-Uso:
-    python main.py --imagem data/entrada/IMG_3265.png
-"""
 from __future__ import annotations
 
 import argparse
@@ -20,7 +9,6 @@ from src.calibration import from_ruler
 
 SAIDA = "data/saida"
 MAX_DIM = 1400
-
 
 def parse_args():
     p = argparse.ArgumentParser(description="Medicao de plantulas de alface")
