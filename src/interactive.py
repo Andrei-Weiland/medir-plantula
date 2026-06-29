@@ -160,7 +160,7 @@ class Editor:
             lines = [
                 "a: adicionar (topo->ponta)   d: apagar   c: estrangulamento",
                 "k: calibrar (2 cliques)  z: desfazer   s: salvar",
-                "h: ajuda   q/ESC: sair",
+                "h: ajuda   p: visualizar imagem com filtros    q/ESC: sair",
             ]
             for i, ln in enumerate(lines):
                 yy = 20 + i * 22
