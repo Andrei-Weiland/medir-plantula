@@ -1,4 +1,4 @@
-"""Converte uma imagem HEIC para PNG (e gera uma versao reduzida para inspecao)."""
+"""Converte uma imagem HEIC para PNG"""
 import sys
 from pathlib import Path
 
@@ -16,12 +16,6 @@ def main():
     dst.parent.mkdir(parents=True, exist_ok=True)
     img.save(dst, "PNG")
     print(f"Salvo {dst} tamanho={img.size}")
-    preview = img.copy()
-    preview.thumbnail((1400, 1400))
-    prev_path = dst.with_name(dst.stem + "_preview.png")
-    preview.save(prev_path, "PNG")
-    print(f"Preview {prev_path} tamanho={preview.size}")
-
 
 if __name__ == "__main__":
     main()
